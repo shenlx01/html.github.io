@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商场客流数据监控系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2a4365);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 25px;
+            background: rgba(13, 22, 41, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-panel {
+            background: rgba(25, 40, 65, 0.7);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .panel-title {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .date-selector {
+            margin-bottom: 25px;
+        }
+        
+        .date-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .date-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #3498db;
+            background: white; /* 改为白色背景 */
+            color: #333; /* 深色文字 */
+            font-size: 1.1rem;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: rgba(20, 30, 48, 0.6);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .data-table th {
+            background: #3498db;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        .data-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .data-table tr:hover {
+            background: rgba(52, 152, 219, 0.2);
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(20, 30, 48, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #3498db;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.95rem;
+            opacity: 0.8;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px 0;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(to right, #2980b9, #2573a7);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.5);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #3498db;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(52, 152, 219, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .map-container {
+            position: relative;
+            background: rgba(20, 30, 48, 0.7);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .map-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .entrance-marker {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.5);
+            animation: pulse 2s infinite;
+            z-index: 10;
+        }
+        
+        .entrance-marker i {
+            color: white;
+            font-size: 14px;
+        }
+        
+        .data-label {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            min-width: 140px;
+            text-align: center;
+            transform: translateX(-50%);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 9;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .data-label .entrance-name {
+            font-weight: 600;
+            color: #3498db;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .data-label .traffic-count {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        
+        .data-label .date-info {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 20;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .low { background: #2ecc71; }
+        .medium { background: #f1c40f; }
+        .high { background: #e74c3c; }
+        
+        .status-bar {
+            padding: 15px;
+            background: rgba(20, 30, 48, 0.7);
+            border-radius: 10px;
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .last-update {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .update-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #2ecc71;
+        }
+        
+        .update-time {
+            font-size: 1.1rem;
+        }
+        
+        .hint {
+            opacity: 0.7;
+            font-style: italic;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+            
+            .panel-title {
+                font-size: 1.4rem;
+            }
+            
+            .map-container {
+                height: 500px;
+            }
+            
+            .data-label {
+                min-width: 120px;
+                padding: 8px 12px;
+                font-size: 1rem;
+            }
+            
+            .data-label .traffic-count {
+                font-size: 1.2rem;
+            }
+            
+            .legend {
+                left: 10px;
+                bottom: 10px;
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .dashboard {
+                padding: 15px;
+            }
+            
+            .control-panel {
+                padding: 15px;
+            }
+            
+            .stat-value {
+                font-size: 1.8rem;
+            }
+            
+            .map-container {
+                height: 400px;
+            }
+            
+            .entrance-marker {
+                width: 22px;
+                height: 22px;
+            }
+            
+            .data-label {
+                min-width: 100px;
+                padding: 6px 10px;
+                font-size: 0.9rem;
+            }
+            
+            .data-label .traffic-count {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-map-marked-alt"></i> 商场客流数据监控系统</h1>
+            <div class="subtitle">基于本地表格数据的实时客流监控解决方案</div>
+        </header>
+        
+        <div class="dashboard">
+            <div class="control-panel">
+                <h2 class="panel-title"><i class="fas fa-sliders-h"></i> 控制面板</h2>
+                
+                <div class="date-selector">
+                    <label class="date-label">选择日期：</label>
+                    <input type="date" id="datePicker" class="date-input" value="2023-10-15">
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-label">总客流</div>
+                        <div class="stat-value" id="totalTraffic">0</div>
+                        <div class="stat-label">今日累计</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">最繁忙出入口</div>
+                        <div class="stat-value" id="busiestEntrance">-</div>
+                        <div class="stat-label">客流最高</div>
+                    </div>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>出入口</th>
+                            <th>客流</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <!-- 数据将由JavaScript填充 -->
+                    </tbody>
+                </table>
+                
+                <div class="buttons">
+                    <button class="btn btn-primary" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> 刷新数据
+                    </button>
+                    <button class="btn btn-secondary" id="simulateBtn">
+                        <i class="fas fa-bolt"></i> 模拟更新
+                    </button>
+                </div>
+            </div>
+            
+            <div class="map-container">
+                <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="商场一层平面图" class="map-image">
+                
+                <!-- 出入口标记 -->
+                <div class="entrance-marker" style="top: 25%; left: 18%;" data-id="main">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <div class="entrance-marker" style="top: 15%; left: 42%;" data-id="east">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <div class="entrance-marker" style="top: 35%; left: 78%;" data-id="west">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <div class="entrance-marker" style="top: 72%; left: 65%;" data-id="south">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <div class="entrance-marker" style="top: 85%; left: 35%;" data-id="metro">
+                    <i class="fas fa-subway"></i>
+                </div>
+                <div class="entrance-marker" style="top: 60%; left: 22%;" data-id="parking">
+                    <i class="fas fa-car"></i>
+                </div>
+                
+                <!-- 数据标签 -->
+                <div class="data-label" style="top: 15%; left: 18%;">
+                    <div class="entrance-name">主入口</div>
+                    <div class="traffic-count">0</div>
+                    <div class="date-info">2023-10-15</div>
+                </div>
+                <div class="data-label" style="top: 5%; left: 42%;">
+                    <div class="entrance-name">东侧入口</div>
+                    <div class="traffic-count">0</div>
+                    <div class="date-info">2023-10-15</div>
+                </div>
+                <div class="data-label" style="top: 25%; left: 78%;">
+                    <div class="entrance-name">西侧入口</div>
+                    <div class="traffic-count">0</div>
+                    <div class="date-info">2023-10-15</div>
+                </div>
+                <div class="data-label" style="top: 62%; left: 65%;">
+                    <div class="entrance-name">南门入口</div>
+                    <div class="traffic-count">0</div>
+                    <div class="date-info">2023-10-15</div>
+                </div>
+                <div class="data-label" style="top: 75%; left: 35%;">
+                    <div class="entrance-name">地铁通道</div>
+                    <div class="traffic-count">0</div>
+                    <div class="date-info">2023-10-15</div>
+                </div>
+                <div class="data-label" style="top: 50%; left: 22%;">
+                    <div class="entrance-name">停车场入口</div>
+                    <div class="traffic-count">0</div>
+                    <div class="date-info">2023-10-15</div>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color low"></div>
+                        <div>低客流 (0-500)</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color medium"></div>
+                        <div>中客流 (500-1500)</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color high"></div>
+                        <div>高客流 (1500+)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <div class="last-update">
+                <div class="update-indicator"></div>
+                <div class="update-time">最后更新时间: <span id="lastUpdateTime">2023-10-15 14:30:45</span></div>
+            </div>
+            <div class="hint">提示: 系统每天凌晨2点自动更新数据，或点击"刷新数据"手动更新</div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟本地表格数据 (实际使用中可以从Excel/CSV文件加载)
+        const trafficData = [
+            { id: "main", name: "主入口", date: "2023-10-15", traffic: 1850 },
+            { id: "east", name: "东侧入口", date: "2023-10-15", traffic: 1240 },
+            { id: "west", name: "西侧入口", date: "2023-10-15", traffic: 980 },
+            { id: "south", name: "南门入口", date: "2023-10-15", traffic: 1560 },
+            { id: "metro", name: "地铁通道", date: "2023-10-15", traffic: 2450 },
+            { id: "parking", name: "停车场入口", date: "2023-10-15", traffic: 870 }
+        ];
+        
+        // 获取当前日期并设置日期选择器
+        function setupDatePicker() {
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('datePicker').value = formattedDate;
+        }
+        
+        // 更新数据标签
+        function updateDataLabels() {
+            const selectedDate = document.getElementById('datePicker').value;
+            const dateLabels = document.querySelectorAll('.date-info');
+            
+            // 更新所有日期标签
+            dateLabels.forEach(label => {
+                label.textContent = selectedDate;
+            });
+            
+            // 更新所有客流数据标签
+            trafficData.forEach(entry => {
+                const label = document.querySelector(`.data-label[style*="${getPositionForId(entry.id)}"] .traffic-count`);
+                if (label) {
+                    label.textContent = entry.traffic.toLocaleString();
+                    
+                    // 根据客流量更新颜色
+                    if (entry.traffic < 500) {
+                        label.parentElement.style.background = "rgba(46, 204, 113, 0.9)";
+                    } else if (entry.traffic < 1500) {
+                        label.parentElement.style.background = "rgba(241, 196, 15, 0.9)";
+                    } else {
+                        label.parentElement.style.background = "rgba(231, 76, 60, 0.9)";
+                    }
+                }
+            });
+        }
+        
+        // 根据出入口ID获取位置
+        function getPositionForId(id) {
+            const positions = {
+                "main": "top: 15%; left: 18%;",
+                "east": "top: 5%; left: 42%;",
+                "west": "top: 25%; left: 78%;",
+                "south": "top: 62%; left: 65%;",
+                "metro": "top: 75%; left: 35%;",
+                "parking": "top: 50%; left: 22%;"
+            };
+            return positions[id] || "";
+        }
+        
+        // 更新统计数据
+        function updateStatistics() {
+            // 计算总客流
+            const totalTraffic = trafficData.reduce((sum, entry) => sum + entry.traffic, 0);
+            document.getElementById('totalTraffic').textContent = totalTraffic.toLocaleString();
+            
+            // 找到最繁忙的出入口
+            const busiest = trafficData.reduce((max, entry) => 
+                entry.traffic > max.traffic ? entry : max, 
+                {traffic: 0}
+            );
+            document.getElementById('busiestEntrance').textContent = busiest.name;
+        }
+        
+        // 更新数据表格
+        function updateDataTable() {
+            const tableBody = document.getElementById('dataTableBody');
+            tableBody.innerHTML = '';
+            
+            trafficData.forEach(entry => {
+                const row = document.createElement('tr');
+                
+                // 根据客流量确定状态
+                let status = '';
+                let statusClass = '';
+                if (entry.traffic < 500) {
+                    status = '畅通';
+                    statusClass = 'low';
+                } else if (entry.traffic < 1500) {
+                    status = '正常';
+                    statusClass = 'medium';
+                } else {
+                    status = '繁忙';
+                    statusClass = 'high';
+                }
+                
+                row.innerHTML = `
+                    <td>${entry.name}</td>
+                    <td>${entry.traffic.toLocaleString()}</td>
+                    <td><span class="${statusClass}">${status}</span></td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 更新最后更新时间
+        function updateLastModifiedTime() {
+            const now = new Date();
+            const formattedTime = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            document.getElementById('lastUpdateTime').textContent = formattedTime;
+        }
+        
+        // 模拟数据更新（增加随机变化）
+        function simulateDataUpdate() {
+            trafficData.forEach(entry => {
+                // 随机增减客流 (0-10%的变化)
+                const change = Math.floor(entry.traffic * (Math.random() * 0.2 - 0.1));
+                entry.traffic = Math.max(100, entry.traffic + change);
+            });
+            
+            updateAllData();
+        }
+        
+        // 更新所有数据
+        function updateAllData() {
+            updateDataLabels();
+            updateStatistics();
+            updateDataTable();
+            updateLastModifiedTime();
+        }
+        
+        // 初始化页面
+        function initPage() {
+            setupDatePicker();
+            updateAllData();
+            
+            // 添加事件监听器
+            document.getElementById('refreshBtn').addEventListener('click', updateAllData);
+            document.getElementById('simulateBtn').addEventListener('click', simulateDataUpdate);
+            document.getElementById('datePicker').addEventListener('change', updateAllData);
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>
